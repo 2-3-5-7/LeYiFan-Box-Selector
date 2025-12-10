@@ -68,10 +68,23 @@
                 rng.value = v;
                 updateResults();
             });
+
+            rng.tabIndex = -1; // 滑块不参与 Tab
         });
     }
 
     createDimensionControls("item", document.getElementById("item-fields"));
+
+    // 在最后一个输入框 (高度) 按 Tab -> 阻止默认行为，强行聚焦第一个 (长度)
+    const firstInput = document.getElementById("item_l_num");
+    const lastInput = document.getElementById("item_h_num");
+    lastInput.addEventListener("keydown", (e) => {
+        if (e.key === "Tab" && !e.shiftKey) {
+            e.preventDefault();
+            firstInput.focus();
+            firstInput.select();
+        }
+    });
 
     function updateResults() {
         const item = {
