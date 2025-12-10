@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>乐一番箱子选择器</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 20px;
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #item-fields {
+            width: 80%;          /* 或者 80%，让它在页面中横向撑开 */
+            max-width: 500px;    /* 可选：限制最大宽度，防止在大屏幕太长 */
+        }
+        .label { font-weight: bold; }
+        .ctrl { display: flex; gap: 12px; align-items: center; }
+        input[type="range"] { flex: 1;}
+        input[type="number"] { width: 80px; }
+        #results { white-space: pre; margin-top: 20px; }
+    </style>
+</head>
+<body>
+<h2>物品尺寸输入</h2>
+<div id="item-fields"></div>
+
+<hr />
+<h2>箱子结果（VM 为割箱后体积重，括号内为不割箱）</h2>
+<div id="results"></div>
+
+<script src="index.js"></script>
+
+<script>
+    const DIM_LABELS = ["长度 (L)", "宽度 (W)", "高度 (H)"];
+
+    function createDimensionControls(prefix, container) {
+        DIM_LABELS.forEach((label, i) => {
+            const dim = ["l", "w", "h"][i];
+
+            const row = document.createElement("div");
+            row.className = "row";
+            row.innerHTML = `
+        <div class="label">${label}</div>
+        <div class="ctrl">
+          <input type="range" min="1" max="110" value="10" id="${prefix}_${dim}_range" />
+          <input type="number" min="1" max="110" value="10" id="${prefix}_${dim}_num" /> cm
+        </div>
+      `;
+
+            container.appendChild(row);
+
+            const rng = row.querySelector(`#${prefix}_${dim}_range`);
+            const num = row.querySelector(`#${prefix}_${dim}_num`);
+
+            rng.addEventListener("input", () => {
+                num.value = rng.value;
+                updateResults();
+            });
+
+            num.addEventListener("input", () => {
+                let v = Math.max(1, Math.min(110, Number(num.value)));
+                num.value = v;
+                rng.value = v;
+                updateResults();
+            });
+        });
+    }
+
+    createDimensionControls("item", document.getElementById("item-fields"));
+
+    function updateResults() {
+        const item = {
+            l: Number(document.getElementById("item_l_num").value),
+            w: Number(document.getElementById("item_w_num").value),
+            h: Number(document.getElementById("item_h_num").value)
+        };
+
+        const results = findTopBoxes(item, 3);
+
+        const text = results
+            .map(r =>
+                `${r.name}  ${r.weight} kg\n${r.mapping}\nVW ${r.volumetricWeightCut.toFixed(
+                    2
+                )} kg (${r.volumetricWeightFull.toFixed(2)} kg)`
+            )
+            .join("\n\n------------------\n\n");
+
+        document.getElementById("results").textContent = text;
+    }
+
+    updateResults();
+</script>
+
+</body>
+</html>
